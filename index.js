@@ -19,8 +19,11 @@ const VAPID_SUBJECT = 'mailto:support@thefinalthird.com';
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
 // ── Database Setup ───────────────────────────────────────────────────────────
+// Strip ?sslmode=require from the URL so `pg` doesn't force rejectUnauthorized=true
+const cleanDbUrl = DB_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
+
 const db = new Client({
-  connectionString: DB_URL,
+  connectionString: cleanDbUrl,
   ssl: {
     rejectUnauthorized: false
   }
