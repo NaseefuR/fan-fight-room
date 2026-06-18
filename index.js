@@ -140,7 +140,8 @@ io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error('Authentication error'));
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // Decode the Base64 secret to match Spring Boot's byte array signing
+    const decoded = jwt.verify(token, Buffer.from(JWT_SECRET, 'base64'));
     socket.username = decoded.sub; // subject is the username
     next();
   } catch (err) {
