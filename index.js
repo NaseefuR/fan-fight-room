@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken');
 const PORT = process.env.PORT || 4000;
 const DB_URL = process.env.DB_URL || 'postgresql://postgres.cmtlgkouyclnjrkaekws:Naseef@7994529046@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require';
 const JWT_SECRET = process.env.JWT_SECRET || 'ZmlmYXByZWRpY3RvcnNlY3JldGtleWZvcmp3dDIwMjZzZWN1cmVsb25na2V5dmFsdWU=';
-
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BMdUDN9OmbXVBU_Z68gckfAtvKNZd72YJuVXojC4Yp_0-1BoMRL4QH32xTYJEWd3NqUuPOjmQJMNmiI3dfoti6Y';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'Ipp4UYgyLE-_XwAhJtxDLtOMXdEDfzBpQBhXyF9Q2H0';
 const VAPID_SUBJECT = 'mailto:support@thefinalthird.com';
@@ -194,6 +194,40 @@ cron.schedule('30 10 * * *', async () => {
   }
 }, {
   timezone: 'Asia/Kolkata'
+});
+
+// ── AI Match Insights ────────────────────────────────────────────────────────
+app.get('/insight', async (req, res) => {
+  try {
+    const { teamA, teamB } = req.query;
+    if (!teamA || !teamB) return res.status(400).json({ error: 'Missing teams' });
+
+    const prompt = `You are a football expert. Provide a concise 2-sentence summary of current team forms, key injuries, and a calculated prediction probability for ${teamA} vs ${teamB}. Do not use more than 2 sentences.`;
+    
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Groq API error: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    const insight = data.choices?.[0]?.message?.content || 'Unable to generate insight.';
+    
+    res.json({ insight });
+  } catch (e) {
+    console.error('AI Insight Error:', e);
+    res.status(500).json({ error: 'Failed to fetch AI insight' });
+  }
 });
 
 // ── Cron: 10-minute Self Ping ────────────────────────────────────────────────
