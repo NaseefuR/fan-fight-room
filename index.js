@@ -21,6 +21,9 @@ webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 // ── Database Setup ───────────────────────────────────────────────────────────
 const db = new Client({
   connectionString: DB_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 db.connect()
   .then(() => console.log('✅ Connected to PostgreSQL (Supabase)'))
